@@ -45,7 +45,8 @@ import numpy
 
 import theano
 import theano.tensor as T
-from load_CIFAR import load_data
+from load_CIFAR import load_training_data
+from load_CIFAR import load_test_data
 
 class LogisticRegression(object):
     """Multi-class Logistic Regression Class
@@ -144,14 +145,19 @@ class LogisticRegression(object):
             raise NotImplementedError()
 
 
+    def predictions(self):
+        """Return the predicted values of the input
+        """
+        return self.y_pred
+
 def sgd_optimization_cifar(learning_rate=0.13, n_epochs=1000,
                            datadir='../', nSamples=1800,
-                           batch_size=600):
+                           batch_size=600, test_batch_size=3000):
     """
     Demonstrate stochastic gradient descent optimization of a log-linear
     model
 
-    This is demonstrated on MNIST.
+    This is demonstrated on CIFAR-10.
 
     :type learning_rate: float
     :param learning_rate: learning rate used (factor for the stochastic
@@ -161,15 +167,15 @@ def sgd_optimization_cifar(learning_rate=0.13, n_epochs=1000,
     :param n_epochs: maximal number of epochs to run the optimizer
 
     :type dataset: string
-    :param dataset: the path of the MNIST dataset file from
-                 http://www.iro.umontreal.ca/~lisa/deep/data/mnist/mnist.pkl.gz
+    :param dataset: the path of the CIFAR-10 dataset file from
 
     """
-    datasets = load_data(datadir,nSamples)
+    datasets = load_training_data(datadir,nSamples)
 
     train_set_x, train_set_y = datasets[0]
     valid_set_x, valid_set_y = datasets[1]
     test_set_x, test_set_y = datasets[2]
+    print datasets[3]
 
     # compute number of minibatches for training, validation and testing
     n_train_batches = train_set_x.get_value(borrow=True).shape[0] / batch_size
@@ -301,6 +307,10 @@ def sgd_optimization_cifar(learning_rate=0.13, n_epochs=1000,
     print >> sys.stderr, ('The code for file ' +
                           os.path.split(__file__)[1] +
                           ' ran for %.1fs' % ((end_time - start_time)))
+
+    #now test on the real data
+    #nTest = 300000
+    #for iStart in 
 
 if __name__ == '__main__':
     sgd_optimization_cifar()

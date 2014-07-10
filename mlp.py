@@ -34,7 +34,7 @@ import theano.tensor as T
 
 
 from logistic_sgd import LogisticRegression
-from load_CIFAR import load_data
+from load_CIFAR import load_training_data
 
 
 class HiddenLayer(object):
@@ -205,7 +205,7 @@ def test_mlp(learning_rate=0.01, L1_reg=0.00, L2_reg=0.0001, n_epochs=1000,
 
 
    """
-    datasets = load_data(datadir,nSamples)
+    datasets = load_training_data(datadir,nSamples)
 
     train_set_x, train_set_y = datasets[0]
     valid_set_x, valid_set_y = datasets[1]

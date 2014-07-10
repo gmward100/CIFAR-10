@@ -8,7 +8,7 @@ import math
 import theano
 import theano.tensor as T
 
-def load_data(directory,nSample):
+def load_training_data(directory,nSample):
     #############
     # LOAD DATA #
     #############
@@ -29,7 +29,8 @@ def load_data(directory,nSample):
     for iImg in range(nTrain):
         fileName = os.path.join(directory, "train", str(iImg+1)+".png")
         img = numpy.array(Image.open(fileName))
-        images[iImg] = numpy.reshape(0.114*img[:,:,0]+0.436*img[:,:,1]+0.615*img[:,:,2],32*32)
+        #images[iImg] = numpy.reshape(0.114*img[:,:,0]+0.436*img[:,:,1]+0.615*img[:,:,2],32*32)
+        images[iImg] = numpy.reshape(0.299*img[:,:,0]+0.587*img[:,:,1]+0.114*img[:,:,2],32*32)
 
 
     def shared_dataset(data_x, data_y, borrow=True):
@@ -53,9 +54,27 @@ def load_data(directory,nSample):
     train_set_x, train_set_y = shared_dataset(images,labels)
 
     rval = [(train_set_x, train_set_y), (valid_set_x, valid_set_y),
-            (test_set_x, test_set_y)]
+            (test_set_x, test_set_y),grpKeys]
     return rval
 
+def load_test_data(directory,iStart,iStop):
+    #############
+    # Load Data #
+    #############
+    print '... loading test data'
+    nTest = iStop-iStart+1
+    images = numpy.ndarray(shape=(nTrain,32*32),dtype=float)
+    for iImg in range(iStart,iStop):
+        fileName = os.path.join(direcotry, "test", str(iImg)+".png")
+        img = numpy.array(Image.open(fileName))
+        images[iImg] = numpy.reshape(0.299*img[:,:,0]+0.587*img[:,:,1]+0.114*img[:,:,2],32*32)
+
+    def shared_dataset(data_x, borrow=True):
+        shared_x = theano.shared(numpy.asarray(data_x, dtype=theano.config.floatX), borrow=borrow)
+        return shared_x
+
+    test_set_x = shared_dataset(images)
+    return test_set_x
 
 if __name__ == '__main__':
     load_data('../',50);
