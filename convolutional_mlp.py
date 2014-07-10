@@ -26,7 +26,7 @@ import sys
 import time
 
 import numpy
-
+import pandas as pd
 import theano
 import theano.tensor as T
 from theano.tensor.signal import downsample
@@ -297,7 +297,7 @@ def evaluate_lenet5(learning_rate=0.1, n_epochs=300,
                           ' ran for %.2fm' % ((end_time - start_time) / 60.))
 
     #now test on the real data
-    nTest = 6000
+    nTest = 300000
     nTestBatches = nTest/test_batch_size
     if nTestBatches*test_batch_size < nTest:
         nTestBatches+=1
