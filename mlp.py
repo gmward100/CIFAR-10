@@ -35,7 +35,7 @@ import theano.tensor as T
 
 from logistic_sgd import LogisticRegression
 from load_CIFAR import load_training_data
-
+from load_CIFAR import load_test_data
 
 class HiddenLayer(object):
     def __init__(self, rng, input, n_in, n_out, W=None, b=None,

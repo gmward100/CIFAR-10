@@ -34,6 +34,7 @@ from theano.tensor.nnet import conv
 
 from logistic_sgd import LogisticRegression
 from load_CIFAR import load_training_data
+from load_CIFAR import load_test_data
 from mlp import HiddenLayer
 
 
@@ -102,8 +103,8 @@ class LeNetConvPoolLayer(object):
         self.params = [self.W, self.b]
 
 
-def evaluate_lenet5(learning_rate=0.1, n_epochs=300,
-                    datadir='../', nSamples=50000,
+def evaluate_lenet5(learning_rate=0.1, n_epochs=3,
+                    datadir='../', nSamples=500,
                     nkerns=[20, 50], batch_size=100, test_batch_size=3000):
     """ Demonstrates lenet on MNIST dataset
 
