@@ -103,7 +103,7 @@ class LeNetConvPoolLayer(object):
 
 
 def evaluate_lenet5(learning_rate=0.1, n_epochs=300,
-                    datadir='../', nSamples=10000,
+                    datadir='../', nSamples=3000,
                     nkerns=[20, 50], batch_size=100):
     """ Demonstrates lenet on MNIST dataset
 
@@ -131,7 +131,7 @@ def evaluate_lenet5(learning_rate=0.1, n_epochs=300,
     train_set_x, train_set_y = datasets[0]
     valid_set_x, valid_set_y = datasets[1]
     test_set_x, test_set_y = datasets[2]
-
+    labelKeys = datasets[3]
     # compute number of minibatches for training, validation and testing
     n_train_batches = train_set_x.get_value(borrow=True).shape[0]
     n_valid_batches = valid_set_x.get_value(borrow=True).shape[0]
@@ -187,7 +187,6 @@ def evaluate_lenet5(learning_rate=0.1, n_epochs=300,
 
     # the cost we minimize during training is the NLL of the model
     cost = layer3.negative_log_likelihood(y)
-
     # create a function to compute the mistakes that are made by the model
     test_model = theano.function([index], layer3.errors(y),
              givens={
@@ -297,5 +296,23 @@ def evaluate_lenet5(learning_rate=0.1, n_epochs=300,
                           os.path.split(__file__)[1] +
                           ' ran for %.2fm' % ((end_time - start_time) / 60.))
 
+    #now test on the real data
+    nTest = 6000
+    nTestBatches = nTest/test_batch_size
+    if nTestBatches*test_batch_size < nTest:
+        nTestBatches+=1
+    predictionCSV = pd.DataFrame(index=range(nTest),columns=['id','label'])
+    for iTestBatch in range(nTestBatches):
+        iStart = iTestBatch*test_batch_size+1
+        iStop = min(iStart+test_batch_size-1,nTest)
+        dataTest = load_test_data(datadir,iStart,iStop)
+        prediction_model = theano.function(inputs=[],outputs=layer3.predictions(),givens={x:dataTest})
+        testPred = prediction_model()
+        predictionCSV['label'][iStart-1:iStop]=testPred
+    #convert to text labels
+    predictionCSV['id']=range(1,nTest+1)
+    predictionCSV['label']=predictionCSV['label'].apply(lambda x: labelKeys[int(x)])
+    predictionCSV.to_csv('/srv/samba/share/kaggle/CIFAR-10/GITHUBCIFAR-10/predictions_conv_sgd.csv',index=False, header=True)
+	
 if __name__ == '__main__':
     evaluate_lenet5()

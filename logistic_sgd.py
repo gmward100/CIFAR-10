@@ -42,7 +42,7 @@ import sys
 import time
 
 import numpy
-
+import pandas as pd
 import theano
 import theano.tensor as T
 from load_CIFAR import load_training_data
@@ -175,7 +175,7 @@ def sgd_optimization_cifar(learning_rate=0.13, n_epochs=1000,
     train_set_x, train_set_y = datasets[0]
     valid_set_x, valid_set_y = datasets[1]
     test_set_x, test_set_y = datasets[2]
-    print datasets[3]
+    labelKeys = datasets[3]
 
     # compute number of minibatches for training, validation and testing
     n_train_batches = train_set_x.get_value(borrow=True).shape[0] / batch_size
@@ -309,8 +309,22 @@ def sgd_optimization_cifar(learning_rate=0.13, n_epochs=1000,
                           ' ran for %.1fs' % ((end_time - start_time)))
 
     #now test on the real data
-    #nTest = 300000
-    #for iStart in 
+    nTest = 6000
+    nTestBatches = nTest/test_batch_size
+    if nTestBatches*test_batch_size < nTest:
+        nTestBatches+=1
+    predictionCSV = pd.DataFrame(index=range(nTest),columns=['id','label'])
+    for iTestBatch in range(nTestBatches):
+        iStart = iTestBatch*test_batch_size+1
+        iStop = min(iStart+test_batch_size-1,nTest)
+        dataTest = load_test_data(datadir,iStart,iStop)
+        prediction_model = theano.function(inputs=[],outputs=classifier.predictions(),givens={x:dataTest})
+        testPred = prediction_model()
+        predictionCSV['label'][iStart-1:iStop]=testPred
+    #convert to text labels
+    predictionCSV['id']=range(1,nTest+1)
+    predictionCSV['label']=predictionCSV['label'].apply(lambda x: labelKeys[int(x)])
+    predictionCSV.to_csv('/srv/samba/share/kaggle/CIFAR-10/GITHUBCIFAR-10/predictions_logistic_sgd.csv',index=False, header=True)
 
 if __name__ == '__main__':
     sgd_optimization_cifar()

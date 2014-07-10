@@ -166,6 +166,10 @@ class MLP(object):
         # log likelihood of the output of the model, computed in the
         # logistic regression layer
         self.negative_log_likelihood = self.logRegressionLayer.negative_log_likelihood
+		
+		# define the prediction
+        self.predictions = self.logRegressionLayer.predictions
+		
         # same holds for the function computing the number of errors
         self.errors = self.logRegressionLayer.errors
 
@@ -173,7 +177,7 @@ class MLP(object):
         # made out of
         self.params = self.hiddenLayer.params + self.logRegressionLayer.params
 
-
+		
 def test_mlp(learning_rate=0.01, L1_reg=0.00, L2_reg=0.0001, n_epochs=1000,
              datadir='../', nSamples=1500, batch_size=20, n_hidden=500):
     """
@@ -210,7 +214,7 @@ def test_mlp(learning_rate=0.01, L1_reg=0.00, L2_reg=0.0001, n_epochs=1000,
     train_set_x, train_set_y = datasets[0]
     valid_set_x, valid_set_y = datasets[1]
     test_set_x, test_set_y = datasets[2]
-
+    labelKeys = datasets[3]
     # compute number of minibatches for training, validation and testing
     n_train_batches = train_set_x.get_value(borrow=True).shape[0] / batch_size
     n_valid_batches = valid_set_x.get_value(borrow=True).shape[0] / batch_size
@@ -356,6 +360,23 @@ def test_mlp(learning_rate=0.01, L1_reg=0.00, L2_reg=0.0001, n_epochs=1000,
                           os.path.split(__file__)[1] +
                           ' ran for %.2fm' % ((end_time - start_time) / 60.))
 
-
+    #now test on the real data
+    nTest = 6000
+    nTestBatches = nTest/test_batch_size
+    if nTestBatches*test_batch_size < nTest:
+        nTestBatches+=1
+    predictionCSV = pd.DataFrame(index=range(nTest),columns=['id','label'])
+    for iTestBatch in range(nTestBatches):
+        iStart = iTestBatch*test_batch_size+1
+        iStop = min(iStart+test_batch_size-1,nTest)
+        dataTest = load_test_data(datadir,iStart,iStop)
+        prediction_model = theano.function(inputs=[],outputs=classifier.predictions(),givens={x:dataTest})
+        testPred = prediction_model()
+        predictionCSV['label'][iStart-1:iStop]=testPred
+    #convert to text labels
+    predictionCSV['id']=range(1,nTest+1)
+    predictionCSV['label']=predictionCSV['label'].apply(lambda x: labelKeys[int(x)])
+    predictionCSV.to_csv('/srv/samba/share/kaggle/CIFAR-10/GITHUBCIFAR-10/predictions_mlp_sgd.csv',index=False, header=True)
+	
 if __name__ == '__main__':
     test_mlp()

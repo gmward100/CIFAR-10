@@ -61,13 +61,13 @@ def load_test_data(directory,iStart,iStop):
     #############
     # Load Data #
     #############
-    print '... loading test data'
+    print '... loading test data',iStart,',',iStop
     nTest = iStop-iStart+1
-    images = numpy.ndarray(shape=(nTrain,32*32),dtype=float)
-    for iImg in range(iStart,iStop):
-        fileName = os.path.join(direcotry, "test", str(iImg)+".png")
+    images = numpy.ndarray(shape=(nTest,32*32),dtype=float)
+    for iImg in range(iStart,iStop+1):
+        fileName = os.path.join(directory, "test", str(iImg)+".png")
         img = numpy.array(Image.open(fileName))
-        images[iImg] = numpy.reshape(0.299*img[:,:,0]+0.587*img[:,:,1]+0.114*img[:,:,2],32*32)
+        images[iImg-iStart-1] = numpy.reshape(0.299*img[:,:,0]+0.587*img[:,:,1]+0.114*img[:,:,2],32*32)
 
     def shared_dataset(data_x, borrow=True):
         shared_x = theano.shared(numpy.asarray(data_x, dtype=theano.config.floatX), borrow=borrow)
