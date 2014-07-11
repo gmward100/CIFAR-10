@@ -103,9 +103,9 @@ class LeNetConvPoolLayer(object):
         self.params = [self.W, self.b]
 
 
-def evaluate_lenet5(learning_rate=0.1, n_epochs=3,
-                    datadir='../', nSamples=500,
-                    nkerns=[20, 50], batch_size=100, test_batch_size=3000):
+def evaluate_lenet5(learning_rate=0.1, n_epochs=300,
+                    datadir='../', nSamples=50000,
+                    nkerns=[20, 50], batch_size=100):
     """ Demonstrates lenet on MNIST dataset
 
     :type learning_rate: float
@@ -299,6 +299,7 @@ def evaluate_lenet5(learning_rate=0.1, n_epochs=3,
 
     #now test on the real data
     nTest = 300000
+    test_batch_size=batch_size
     nTestBatches = nTest/test_batch_size
     if nTestBatches*test_batch_size < nTest:
         nTestBatches+=1
