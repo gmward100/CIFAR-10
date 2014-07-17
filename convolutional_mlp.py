@@ -103,10 +103,10 @@ class LeNetConvPoolLayer(object):
         self.params = [self.W, self.b]
 
 
-def evaluate_lenet5(learning_rate=0.1, n_epochs=300,
-                    datadir='../', nSamples=50000,
+def evaluate_lenet5(learning_rate=0.1, n_epochs=2,
+                    datadir='../', nSamples=6000,
                     nkerns=[20, 50], batch_size=100):
-    """ Demonstrates lenet on MNIST dataset
+    """ Demonstrates lenet on CIFAR dataset
 
     :type learning_rate: float
     :param learning_rate: learning rate used (factor for the stochastic
@@ -133,6 +133,8 @@ def evaluate_lenet5(learning_rate=0.1, n_epochs=300,
     valid_set_x, valid_set_y = datasets[1]
     test_set_x, test_set_y = datasets[2]
     labelKeys = datasets[3]
+    valid_set_id = datasets[4]
+    valid_set_labels = datasets[5]
     # compute number of minibatches for training, validation and testing
     n_train_batches = train_set_x.get_value(borrow=True).shape[0]
     n_valid_batches = valid_set_x.get_value(borrow=True).shape[0]
@@ -198,7 +200,10 @@ def evaluate_lenet5(learning_rate=0.1, n_epochs=300,
             givens={
                 x: valid_set_x[index * batch_size: (index + 1) * batch_size],
                 y: valid_set_y[index * batch_size: (index + 1) * batch_size]})
-
+				
+    validate_prediction = theano.function([index], layer3.predictions(),
+            givens={
+                x: valid_set_x[index * batch_size: (index + 1) * batch_size]})
     # create a list of all model parameters to be fit by gradient descent
     params = layer3.params + layer2.params + layer1.params + layer0.params
 
@@ -297,8 +302,22 @@ def evaluate_lenet5(learning_rate=0.1, n_epochs=300,
                           os.path.split(__file__)[1] +
                           ' ran for %.2fm' % ((end_time - start_time) / 60.))
 
+    #output the validation results
+    nValid = valid_set_x.get_value(borrow=True).shape[0]
+    predictionValidationCSV = pd.DataFrame(index=range(nValid),columns=['id','label','truth'])
+    for iValidBatch in range(n_train_batches):
+        validPred = validate_prediction(iValidBatch)
+        predictionValidationCSV['label'][iValidBatch*batch_size:(iValidBatch+1)*batch_size]=validPred
+		
+    predictionValidationCSV['id']=valid_set_id
+    predictionValidationCSV['truth']=valid_set_labels
+    #convert to text labels
+    predictionValidationCSV['label']=predictionValidationCSV['label'].apply(lambda x: labelKeys[int(x)])
+    predictionValidationCSV['truth']=predictionValidationCSV['truth'].apply(lambda x: labelKeys[int(x)])
+    predictionValidationCSV.to_csv('/srv/samba/share/kaggle/CIFAR-10/GITHUBCIFAR-10/validation_predictions_conv_sgd.csv',index=False, header=True)						  
+						  
     #now test on the real data
-    nTest = 300000
+    nTest = 3000
     test_batch_size=batch_size
     nTestBatches = nTest/test_batch_size
     if nTestBatches*test_batch_size < nTest:

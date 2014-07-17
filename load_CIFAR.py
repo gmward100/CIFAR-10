@@ -4,9 +4,12 @@ import time
 import pandas as pd
 from PIL import Image
 import numpy
+import random
 import math
 import theano
 import theano.tensor as T
+#from sklearn.utils import shuffle
+#from random import shuffle
 
 def load_training_data(directory,nSample):
     #############
@@ -26,6 +29,7 @@ def load_training_data(directory,nSample):
     nTrain = numpy.minimum(nTrain,nSample)
     labels = numericLabels[0:nTrain]
     images = numpy.ndarray(shape=(nTrain,32*32),dtype=float)
+    trainId = range(nTrain)
     for iImg in range(nTrain):
         fileName = os.path.join(directory, "train", str(iImg+1)+".png")
         img = numpy.array(Image.open(fileName))
@@ -48,13 +52,24 @@ def load_training_data(directory,nSample):
         # ``shared_y`` we will have to cast it to int. This little hack
         # lets ous get around this issue
         return shared_x, T.cast(shared_y, 'int32')
-
-    test_set_x, test_set_y = shared_dataset(images,labels)
-    valid_set_x, valid_set_y = shared_dataset(images,labels)
-    train_set_x, train_set_y = shared_dataset(images,labels)
+		
+#    random_state = numpy.random.RandomState(243)
+#    images, labels, trainId = shuffle(images,labels,trainId,random_state=random_state)
+    random.seed(243)
+    rndmState = random.getstate()
+    trainId = range(1,nTrain+1)
+    random.shuffle(trainId)
+    random.setstate(rndmState)
+    random.shuffle(images)
+    random.setstate(rndmState)
+    random.shuffle(labels)
+    nOneThird = nSample/3
+    test_set_x, test_set_y = shared_dataset(images[0:nOneThird],labels[0:nOneThird])
+    valid_set_x, valid_set_y = shared_dataset(images[nOneThird:2*nOneThird],labels[nOneThird:2*nOneThird])
+    train_set_x, train_set_y = shared_dataset(images[2*nOneThird:3*nOneThird],labels[2*nOneThird:3*nOneThird])
 
     rval = [(train_set_x, train_set_y), (valid_set_x, valid_set_y),
-            (test_set_x, test_set_y),grpKeys]
+            (test_set_x, test_set_y),grpKeys,trainId[nOneThird:2*nOneThird],labels[nOneThird:2*nOneThird]]
     return rval
 
 def load_test_data(directory,iStart,iStop):
@@ -78,4 +93,4 @@ def load_test_data(directory,iStart,iStop):
 
 if __name__ == '__main__':
     load_data('../',50);
-	
+
