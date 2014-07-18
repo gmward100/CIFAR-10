@@ -29,12 +29,18 @@ def load_training_data(directory,nSample):
     nTrain = numpy.minimum(nTrain,nSample)
     labels = numericLabels[0:nTrain]
     images = numpy.ndarray(shape=(nTrain,32*32),dtype=float)
-    trainId = range(nTrain)
+    trainId = range(1,nTrain+1)
     for iImg in range(nTrain):
         fileName = os.path.join(directory, "train", str(iImg+1)+".png")
         img = numpy.array(Image.open(fileName))
         #images[iImg] = numpy.reshape(0.114*img[:,:,0]+0.436*img[:,:,1]+0.615*img[:,:,2],32*32)
         images[iImg] = numpy.reshape(0.299*img[:,:,0]+0.587*img[:,:,1]+0.114*img[:,:,2],32*32)
+	maxVal = numpy.amax(images[iImg])
+        minVal = numpy.amin(images[iImg])
+        if maxVal>minVal:
+            images[iImg]=(images[iImg]-minVal)/(maxVal-minVal)
+        else:
+            print 'Max =  Min :',maxVal,',',minVal,' for i = ',iImg
 
 
     def shared_dataset(data_x, data_y, borrow=True):
@@ -57,7 +63,6 @@ def load_training_data(directory,nSample):
 #    images, labels, trainId = shuffle(images,labels,trainId,random_state=random_state)
     random.seed(243)
     rndmState = random.getstate()
-    trainId = range(1,nTrain+1)
     random.shuffle(trainId)
     random.setstate(rndmState)
     random.shuffle(images)
@@ -83,6 +88,12 @@ def load_test_data(directory,iStart,iStop):
         fileName = os.path.join(directory, "test", str(iImg)+".png")
         img = numpy.array(Image.open(fileName))
         images[iImg-iStart-1] = numpy.reshape(0.299*img[:,:,0]+0.587*img[:,:,1]+0.114*img[:,:,2],32*32)
+        maxVal = numpy.amax(images[iImg-iStart-1])
+        minVal = numpy.amin(images[iImg-iStart-1])
+        if maxVal>minVal:
+           images[iImg-iStart-1]=(images[iImg-iStart-1]-minVal)/(maxVal-minVal)
+        else:
+           print 'Max = Min :',maxVal,',',minVal,' for i = ', iImg
 
     def shared_dataset(data_x, borrow=True):
         shared_x = theano.shared(numpy.asarray(data_x, dtype=theano.config.floatX), borrow=borrow)

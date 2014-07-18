@@ -103,8 +103,8 @@ class LeNetConvPoolLayer(object):
         self.params = [self.W, self.b]
 
 
-def evaluate_lenet5(learning_rate=0.1, n_epochs=2,
-                    datadir='../', nSamples=6000,
+def evaluate_lenet5(learning_rate=0.1, n_epochs=3,
+                    datadir='../', nSamples=500,
                     nkerns=[20, 50], batch_size=100):
     """ Demonstrates lenet on CIFAR dataset
 
@@ -304,20 +304,22 @@ def evaluate_lenet5(learning_rate=0.1, n_epochs=2,
 
     #output the validation results
     nValid = valid_set_x.get_value(borrow=True).shape[0]
+    nValid = nValid - numpy.mod(nValid,batch_size)
+    print 'n validation = ',nValid
     predictionValidationCSV = pd.DataFrame(index=range(nValid),columns=['id','label','truth'])
-    for iValidBatch in range(n_train_batches):
+    for iValidBatch in range(n_valid_batches):
         validPred = validate_prediction(iValidBatch)
         predictionValidationCSV['label'][iValidBatch*batch_size:(iValidBatch+1)*batch_size]=validPred
 		
-    predictionValidationCSV['id']=valid_set_id
-    predictionValidationCSV['truth']=valid_set_labels
+    predictionValidationCSV['id']=valid_set_id[0:nValid]
+    predictionValidationCSV['truth']=valid_set_labels[0:nValid]
     #convert to text labels
     predictionValidationCSV['label']=predictionValidationCSV['label'].apply(lambda x: labelKeys[int(x)])
     predictionValidationCSV['truth']=predictionValidationCSV['truth'].apply(lambda x: labelKeys[int(x)])
     predictionValidationCSV.to_csv('/srv/samba/share/kaggle/CIFAR-10/GITHUBCIFAR-10/validation_predictions_conv_sgd.csv',index=False, header=True)						  
 						  
     #now test on the real data
-    nTest = 3000
+    nTest = 300
     test_batch_size=batch_size
     nTestBatches = nTest/test_batch_size
     if nTestBatches*test_batch_size < nTest:
